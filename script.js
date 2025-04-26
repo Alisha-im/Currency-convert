@@ -3,41 +3,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchButton = document.getElementById('search-button');
     const resultContainer = document.getElementById('result-container');
 
-    // In a real application, you would fetch this data from an API.
-    // This is a simplified example using a JavaScript object.
-    const countryCurrencies = {
-        "United States": "USD",
-        "Canada": "CAD",
-        "United Kingdom": "GBP",
-        "Japan": "JPY",
-        "Australia": "AUD",
-        "Germany": "EUR",
-        "France": "EUR",
-        "Brazil": "BRL",
-        "India": "INR",
-        "China": "CNY"
-        // Add more countries and their currencies here
-    };
-
     searchButton.addEventListener('click', () => {
         const countryName = countryInput.value.trim();
         resultContainer.textContent = ''; // Clear previous result
+        resultContainer.classList.remove('text-red-500');
 
         if (countryName) {
-            const currency = countryCurrencies[countryName];
-            if (currency) {
-                resultContainer.textContent = `${countryName} uses the currency: ${currency}`;
-            } else {
-                resultContainer.textContent = `Currency information not found for ${countryName}.`;
-                resultContainer.classList.add('error'); // Optionally add an error class for styling
-            }
+            // Use fetch to make a GET request to your Java backend
+            fetch(`/currency?country=${encodeURIComponent(countryName)}`)  // Use template literals and encodeURIComponent
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.text(); // Use .text() to get plain text
+                })
+                .then(data => {
+                    resultContainer.textContent = data; // Display the text
+                    if (data.includes("not found")) {
+                        resultContainer.classList.add('text-red-500');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    resultContainer.textContent = 'Failed to fetch currency information. Please try again later.';
+                    resultContainer.classList.add('text-red-500');
+                });
         } else {
             resultContainer.textContent = 'Please enter a country name.';
-            resultContainer.classList.add('error');
+            resultContainer.classList.add('text-red-500');
         }
     });
 
-    // Optional: Allow searching when the user presses Enter in the input field
     countryInput.addEventListener('keypress', (event) => {
         if (event.key === 'Enter') {
             searchButton.click();
